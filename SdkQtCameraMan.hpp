@@ -54,19 +54,7 @@ class SdkQtCameraMan
 {
   public:
     SdkQtCameraMan(Ogre::Camera* cam, Ogre::SceneNode* camNode)
-        : mCamera(0)
-        , mTarget(0)
-        , mOrbiting(false)
-        , mZooming(false)
-        , mTopSpeed(150)
-        , mVelocity(Ogre::Vector3::ZERO)
-        , mGoingForward(false)
-        , mGoingBack(false)
-        , mGoingLeft(false)
-        , mGoingRight(false)
-        , mGoingUp(false)
-        , mGoingDown(false)
-        , mFastMove(false) {
+        : mCamera(0), mTarget(0), mVelocity(Ogre::Vector3::ZERO) {
 
         setCamera(cam);
         mCameraNode = camNode;
@@ -118,9 +106,11 @@ class SdkQtCameraMan
     /*-----------------------------------------------------------------------------
     | Sets the camera's top speed. Only applies for free-look style.
     -----------------------------------------------------------------------------*/
-    virtual void setTopSpeed(Ogre::Real topSpeed) { mTopSpeed = topSpeed; }
+    virtual void setTopSpeed(Ogre::Real topSpeed) {
+        config.topSpeed = topSpeed;
+    }
 
-    virtual Ogre::Real getTopSpeed() { return mTopSpeed; }
+    virtual Ogre::Real getTopSpeed() { return config.topSpeed; }
 
     /*-----------------------------------------------------------------------------
     | Sets the movement style of our camera man.
@@ -150,13 +140,13 @@ class SdkQtCameraMan
     -----------------------------------------------------------------------------*/
     virtual void manualStop() {
         if (mStyle == CS_FREELOOK) {
-            mGoingForward = false;
-            mGoingBack    = false;
-            mGoingLeft    = false;
-            mGoingRight   = false;
-            mGoingUp      = false;
-            mGoingDown    = false;
-            mVelocity     = Ogre::Vector3::ZERO;
+            controlStte.goingForward = false;
+            controlStte.goingBack    = false;
+            controlStte.goingLeft    = false;
+            controlStte.goingRight   = false;
+            controlStte.goingUp      = false;
+            controlStte.goingDown    = false;
+            mVelocity                = Ogre::Vector3::ZERO;
         }
     }
 
@@ -165,36 +155,40 @@ class SdkQtCameraMan
             // build our acceleration vector based on keyboard input
             // composite
             Ogre::Vector3 accel = Ogre::Vector3::ZERO;
-            if (mGoingForward) {
+            if (controlStte.goingForward) {
                 // was `getDirection()`
                 accel += mCameraNode->getOrientation().zAxis() * -1;
             }
-            if (mGoingBack) {
+            if (controlStte.goingBack) {
                 accel -= mCameraNode->getOrientation().zAxis() * -1;
             }
-            if (mGoingRight) {
+            if (controlStte.goingRight) {
                 accel += mCameraNode->getOrientation().xAxis();
             }
-            if (mGoingLeft) {
+            if (controlStte.goingLeft) {
                 accel -= mCameraNode->getOrientation().xAxis();
             }
-            if (mGoingUp) {
+            if (controlStte.goingUp) {
                 accel += mCameraNode->getOrientation().yAxis();
             }
-            if (mGoingDown) {
+            if (controlStte.goingDown) {
                 accel -= mCameraNode->getOrientation().yAxis();
             }
 
             // if accelerating, try to reach top speed in a certain time
-            Ogre::Real topSpeed = mFastMove ? mTopSpeed * 20 : mTopSpeed;
+            Ogre::Real topSpeed = controlStte.fastMove
+                                      ? config.topFastSpeed
+                                      : config.topSpeed;
+
             if (accel.squaredLength() != 0) {
                 accel.normalise();
                 mVelocity += accel * topSpeed * evt.timeSinceLastFrame
-                             * 10;
+                             * config.acceleration;
             }
             // if not accelerating, try to stop in a certain time
             else {
-                mVelocity -= mVelocity * evt.timeSinceLastFrame * 10;
+                mVelocity -= mVelocity * evt.timeSinceLastFrame
+                             * config.deceleration;
             }
 
             Ogre::Real tooSmall = std::numeric_limits<
@@ -222,22 +216,22 @@ class SdkQtCameraMan
     virtual void injectKeyDown(const QKeyEvent& evt) {
         if (mStyle == CS_FREELOOK) {
             if (evt.key() == Qt::Key_W || evt.key() == Qt::Key_Up) {
-                mGoingForward = true;
+                controlStte.goingForward = true;
             } else if (
                 evt.key() == Qt::Key_S || evt.key() == Qt::Key_Down) {
-                mGoingBack = true;
+                controlStte.goingBack = true;
             } else if (
                 evt.key() == Qt::Key_A || evt.key() == Qt::Key_Left) {
-                mGoingLeft = true;
+                controlStte.goingLeft = true;
             } else if (
                 evt.key() == Qt::Key_D || evt.key() == Qt::Key_Right) {
-                mGoingRight = true;
+                controlStte.goingRight = true;
             } else if (evt.key() == Qt::Key_PageUp) {
-                mGoingUp = true;
+                controlStte.goingUp = true;
             } else if (evt.key() == Qt::Key_PageDown) {
-                mGoingDown = true;
+                controlStte.goingDown = true;
             } else if (evt.key() == Qt::Key_Shift) {
-                mFastMove = true;
+                controlStte.fastMove = true;
             }
         }
     }
@@ -248,22 +242,22 @@ class SdkQtCameraMan
     virtual void injectKeyUp(const QKeyEvent& evt) {
         if (mStyle == CS_FREELOOK) {
             if (evt.key() == Qt::Key_W || evt.key() == Qt::Key_Up) {
-                mGoingForward = false;
+                controlStte.goingForward = false;
             } else if (
                 evt.key() == Qt::Key_S || evt.key() == Qt::Key_Down) {
-                mGoingBack = false;
+                controlStte.goingBack = false;
             } else if (
                 evt.key() == Qt::Key_A || evt.key() == Qt::Key_Left) {
-                mGoingLeft = false;
+                controlStte.goingLeft = false;
             } else if (
                 evt.key() == Qt::Key_D || evt.key() == Qt::Key_Right) {
-                mGoingRight = false;
+                controlStte.goingRight = false;
             } else if (evt.key() == Qt::Key_PageUp) {
-                mGoingUp = false;
+                controlStte.goingUp = false;
             } else if (evt.key() == Qt::Key_PageDown) {
-                mGoingDown = false;
+                controlStte.goingDown = false;
             } else if (evt.key() == Qt::Key_Shift) {
-                mFastMove = false;
+                controlStte.fastMove = false;
             }
         }
     }
@@ -272,18 +266,13 @@ class SdkQtCameraMan
     | Processes mouse movement differently for each style.
     -----------------------------------------------------------------------------*/
     virtual void injectMouseMove(int relX, int relY) {
-        //            static int lastX = evt.x();
-        //            static int lastY = evt.y();
-        //            int relX = evt.x() - lastX;
-        //            int relY = evt.y() - lastY;
-        //            lastX = evt.x();
-        //            lastY = evt.y();
         if (mStyle == CS_ORBIT) {
             Ogre::Real dist = (mCameraNode->getPosition()
                                - mTarget->_getDerivedPosition())
                                   .length();
 
-            if (mOrbiting) // yaw around the target, and pitch locally
+            if (controlStte.orbiting) // yaw around the target, and pitch
+                                      // locally
             {
                 mCameraNode->setPosition(mTarget->_getDerivedPosition());
 
@@ -295,8 +284,8 @@ class SdkQtCameraMan
 
                 // don't let the camera go over the top or around the
                 // bottom of the target
-            } else if (mZooming) // move the camera toward or away from the
-                                 // target
+            } else if (controlStte.zooming) // move the camera toward or
+                                            // away from the target
             {
                 // the further the camera is, the faster it moves
                 mCameraNode->translate(
@@ -337,9 +326,9 @@ class SdkQtCameraMan
     virtual void injectMouseDown(const QMouseEvent& evt) {
         if (mStyle == CS_ORBIT) {
             if (evt.buttons() & Qt::LeftButton) {
-                mOrbiting = true;
+                controlStte.orbiting = true;
             } else if (evt.buttons() & Qt::RightButton) {
-                mZooming = true;
+                controlStte.zooming = true;
             }
         }
     }
@@ -351,9 +340,9 @@ class SdkQtCameraMan
     virtual void injectMouseUp(const QMouseEvent& evt) {
         if (mStyle == CS_ORBIT) {
             if (evt.buttons() & Qt::LeftButton) {
-                mOrbiting = false;
+                controlStte.orbiting = false;
             } else if (evt.buttons() & Qt::RightButton) {
-                mZooming = false;
+                controlStte.zooming = false;
             }
         }
     }
@@ -363,17 +352,28 @@ class SdkQtCameraMan
     Ogre::SceneNode* mCameraNode;
     CameraStyle      mStyle;
     Ogre::SceneNode* mTarget;
-    bool             mOrbiting;
-    bool             mZooming;
-    Ogre::Real       mTopSpeed;
     Ogre::Vector3    mVelocity;
-    bool             mGoingForward;
-    bool             mGoingBack;
-    bool             mGoingLeft;
-    bool             mGoingRight;
-    bool             mGoingUp;
-    bool             mGoingDown;
-    bool             mFastMove;
+
+    struct MoveControlConfig
+    {
+        int acceleration = 2;
+        int deceleration = 10;
+        int topSpeed     = 150;
+        int topFastSpeed = 150 * 10;
+    } config;
+
+    struct MoveControlState
+    {
+        bool goingForward = false;
+        bool goingBack    = false;
+        bool goingLeft    = false;
+        bool goingRight   = false;
+        bool goingUp      = false;
+        bool goingDown    = false;
+        bool fastMove     = false;
+        bool zooming      = false;
+        bool orbiting     = false;
+    } controlStte;
 };
 } // namespace OgreQtBites
 
