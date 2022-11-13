@@ -1,5 +1,9 @@
 #include "QTOgreWindow.hpp"
 
+#include <QDebug>
+#include <QFileInfo>
+#include <QDir>
+
 #include <OGRE/OgrePlatformInformation.h>
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreDeprecated.h>
@@ -40,26 +44,29 @@ void QTOgreWindow::render(QPainter* painter) { Q_UNUSED(painter); }
  * the window is first exposed.
  */
 void QTOgreWindow::initialize() {
+    qDebug() << "Started initialization";
     // As shown Ogre3D is initialised normally; just like in other
     // documentation.
-#ifdef _MSC_VER
     ogreRoot = new Ogre::Root(
-        Ogre::String("plugins" OGRE_BUILD_SUFFIX ".cfg"));
-#else
-    ogreRoot = new Ogre::Root(Ogre::String("plugins.cfg"));
-#endif
+        Ogre::String((QFileInfo(__FILE__).dir().path() + "/plugins.cfg")
+                         .toStdString()));
     Ogre::ConfigFile ogreConfig;
 
     // Todo: load resources.
 
+    Q_CHECK_PTR(ogreRoot);
+
+    qDebug() << "Here 1";
     const Ogre::RenderSystemList& rsList = ogreRoot
                                                ->getAvailableRenderers();
-    Ogre::RenderSystem* rs = rsList[0];
+    qDebug() << "Created rendering system";
+    Ogre::RenderSystem* rs = rsList.at(0);
 
     // This list sets up the search order for used render system.
     Ogre::StringVector renderOrder;
     renderOrder.push_back("OpenGL");
     renderOrder.push_back("OpenGL 3+");
+    qDebug() << "Added render order";
     for (Ogre::StringVector::iterator iter = renderOrder.begin();
          iter != renderOrder.end();
          iter++) {
@@ -75,9 +82,11 @@ void QTOgreWindow::initialize() {
             break;
         }
     }
+    qDebug() << "here?";
     if (rs == NULL) {
         if (ogreRoot->restoreConfig()) {
             if (!ogreRoot->showConfigDialog(nullptr)) {
+                qDebug() << "Failure";
                 OGRE_EXCEPT(
                     Ogre::Exception::ERR_INVALIDPARAMS,
                     "Abort render system configuration",
@@ -110,22 +119,10 @@ void QTOgreWindow::initialize() {
      * (externalWindowHandle and parentWindowHandle) this code will work
      * with OpenGL and DirectX.
      */
-#if defined(Q_OS_MAC) || defined(Q_OS_WIN)
-    parameters["externalWindowHandle"] = Ogre::StringConverter::toString(
-        (size_t)this->winId());
-    parameters["parentWindowHandle"] = Ogre::StringConverter::toString(
-        (size_t)this->winId());
-#else
     parameters["externalWindowHandle"] = Ogre::StringConverter::toString(
         (unsigned long)this->winId());
     parameters["parentWindowHandle"] = Ogre::StringConverter::toString(
         (unsigned long)this->winId());
-#endif
-
-#if defined(Q_OS_MAC)
-    parameters["macAPI"]               = "cocoa";
-    parameters["macAPICocoaUseNSView"] = true;
-#endif
 
     /*
      * Note that below we supply the creation function for the Ogre3D
@@ -136,6 +133,7 @@ void QTOgreWindow::initialize() {
         "QT Window", this->width(), this->height(), false, &parameters);
     ogreWindow->setVisible(true);
 
+    qDebug() << "Created ogre window";
     /*
      * The rest of the code in the initialisation function is standard
      * Ogre3D scene code. Consult other tutorials for specifics.

@@ -9,6 +9,8 @@ SOURCES += *.cpp
 HEADERS  += *.hpp
 FORMS    += MainWindow.ui
 
+DISTFILES *= plugins.cfg
+
 #DEFINES *= OGRE_NODELESS_POSITIONING
 
 LIBS += -lboost_system
