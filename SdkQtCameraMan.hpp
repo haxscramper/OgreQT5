@@ -54,10 +54,10 @@ class SdkQtCameraMan
 {
   public:
     SdkQtCameraMan(Ogre::Camera* cam, Ogre::SceneNode* camNode)
-        : mCamera(0), mTarget(0), mVelocity(Ogre::Vector3::ZERO) {
+        : camera(0), target(0), mVelocity(Ogre::Vector3::ZERO) {
 
         setCamera(cam);
-        mCameraNode = camNode;
+        cameraNode = camNode;
         setStyle(CS_FREELOOK);
     }
 
@@ -66,26 +66,26 @@ class SdkQtCameraMan
     /*-----------------------------------------------------------------------------
     | Swaps the camera on our camera man for another camera.
     -----------------------------------------------------------------------------*/
-    virtual void setCamera(Ogre::Camera* cam) { mCamera = cam; }
+    virtual void setCamera(Ogre::Camera* cam) { camera = cam; }
 
-    virtual Ogre::Camera* getCamera() { return mCamera; }
+    virtual Ogre::Camera* getCamera() { return camera; }
 
     /*-----------------------------------------------------------------------------
     | Sets the target we will revolve around. Only applies for orbit style.
     -----------------------------------------------------------------------------*/
-    virtual void setTarget(Ogre::SceneNode* target) {
-        if (target != mTarget) {
-            mTarget = target;
-            if (target) {
+    virtual void setTarget(Ogre::SceneNode* inTarget) {
+        if (inTarget != target) {
+            target = inTarget;
+            if (inTarget) {
                 setYawPitchDist(Ogre::Degree(0), Ogre::Degree(15), 150);
-                mCameraNode->setAutoTracking(true, mTarget);
+                cameraNode->setAutoTracking(true, target);
             } else {
-                mCameraNode->setAutoTracking(false);
+                cameraNode->setAutoTracking(false);
             }
         }
     }
 
-    virtual Ogre::SceneNode* getTarget() { return mTarget; }
+    virtual Ogre::SceneNode* getTarget() { return target; }
 
     /*-----------------------------------------------------------------------------
     | Sets the spatial offset from the target. Only applies for orbit
@@ -95,11 +95,11 @@ class SdkQtCameraMan
         Ogre::Radian yaw,
         Ogre::Radian pitch,
         Ogre::Real   dist) {
-        mCameraNode->setPosition(mTarget->_getDerivedPosition());
-        mCameraNode->setOrientation(mTarget->_getDerivedOrientation());
-        mCameraNode->yaw(yaw);
-        mCameraNode->pitch(-pitch);
-        mCameraNode->translate(
+        cameraNode->setPosition(target->_getDerivedPosition());
+        cameraNode->setOrientation(target->_getDerivedOrientation());
+        cameraNode->yaw(yaw);
+        cameraNode->pitch(-pitch);
+        cameraNode->translate(
             Ogre::Vector3(0, 0, dist), Ogre::Node::TS_LOCAL);
     }
 
@@ -115,31 +115,31 @@ class SdkQtCameraMan
     /*-----------------------------------------------------------------------------
     | Sets the movement style of our camera man.
     -----------------------------------------------------------------------------*/
-    virtual void setStyle(CameraStyle style) {
-        if (mStyle != CS_ORBIT && style == CS_ORBIT) {
+    virtual void setStyle(CameraStyle inStyle) {
+        if (style != CS_ORBIT && inStyle == CS_ORBIT) {
             setTarget(
-                mTarget ? mTarget
-                        : mCamera->getSceneManager()->getRootSceneNode());
-            mCameraNode->setFixedYawAxis(true);
+                target ? target
+                       : camera->getSceneManager()->getRootSceneNode());
+            cameraNode->setFixedYawAxis(true);
             manualStop();
             setYawPitchDist(Ogre::Degree(0), Ogre::Degree(15), 150);
-        } else if (mStyle != CS_FREELOOK && style == CS_FREELOOK) {
-            mCameraNode->setAutoTracking(false);
-            mCameraNode->setFixedYawAxis(true);
-        } else if (mStyle != CS_MANUAL && style == CS_MANUAL) {
-            mCameraNode->setAutoTracking(false);
+        } else if (style != CS_FREELOOK && inStyle == CS_FREELOOK) {
+            cameraNode->setAutoTracking(false);
+            cameraNode->setFixedYawAxis(true);
+        } else if (style != CS_MANUAL && inStyle == CS_MANUAL) {
+            cameraNode->setAutoTracking(false);
             manualStop();
         }
-        mStyle = style;
+        style = inStyle;
     }
 
-    virtual CameraStyle getStyle() { return mStyle; }
+    virtual CameraStyle getStyle() { return style; }
 
     /*-----------------------------------------------------------------------------
     | Manually stops the camera when in free-look mode.
     -----------------------------------------------------------------------------*/
     virtual void manualStop() {
-        if (mStyle == CS_FREELOOK) {
+        if (style == CS_FREELOOK) {
             controlStte.goingForward = false;
             controlStte.goingBack    = false;
             controlStte.goingLeft    = false;
@@ -151,28 +151,28 @@ class SdkQtCameraMan
     }
 
     virtual bool frameRenderingQueued(const Ogre::FrameEvent& evt) {
-        if (mStyle == CS_FREELOOK) {
+        if (style == CS_FREELOOK) {
             // build our acceleration vector based on keyboard input
             // composite
             Ogre::Vector3 accel = Ogre::Vector3::ZERO;
             if (controlStte.goingForward) {
                 // was `getDirection()`
-                accel += mCameraNode->getOrientation().zAxis() * -1;
+                accel += cameraNode->getOrientation().zAxis() * -1;
             }
             if (controlStte.goingBack) {
-                accel -= mCameraNode->getOrientation().zAxis() * -1;
+                accel -= cameraNode->getOrientation().zAxis() * -1;
             }
             if (controlStte.goingRight) {
-                accel += mCameraNode->getOrientation().xAxis();
+                accel += cameraNode->getOrientation().xAxis();
             }
             if (controlStte.goingLeft) {
-                accel -= mCameraNode->getOrientation().xAxis();
+                accel -= cameraNode->getOrientation().xAxis();
             }
             if (controlStte.goingUp) {
-                accel += mCameraNode->getOrientation().yAxis();
+                accel += cameraNode->getOrientation().yAxis();
             }
             if (controlStte.goingDown) {
-                accel -= mCameraNode->getOrientation().yAxis();
+                accel -= cameraNode->getOrientation().yAxis();
             }
 
             // if accelerating, try to reach top speed in a certain time
@@ -203,7 +203,7 @@ class SdkQtCameraMan
             }
 
             if (mVelocity != Ogre::Vector3::ZERO) {
-                mCameraNode->translate(mVelocity * evt.timeSinceLastFrame);
+                cameraNode->translate(mVelocity * evt.timeSinceLastFrame);
             }
         }
 
@@ -214,7 +214,7 @@ class SdkQtCameraMan
     | Processes key presses for free-look style movement.
     -----------------------------------------------------------------------------*/
     virtual void injectKeyDown(const QKeyEvent& evt) {
-        if (mStyle == CS_FREELOOK) {
+        if (style == CS_FREELOOK) {
             if (evt.key() == Qt::Key_W || evt.key() == Qt::Key_Up) {
                 controlStte.goingForward = true;
             } else if (
@@ -240,7 +240,7 @@ class SdkQtCameraMan
     | Processes key releases for free-look style movement.
     -----------------------------------------------------------------------------*/
     virtual void injectKeyUp(const QKeyEvent& evt) {
-        if (mStyle == CS_FREELOOK) {
+        if (style == CS_FREELOOK) {
             if (evt.key() == Qt::Key_W || evt.key() == Qt::Key_Up) {
                 controlStte.goingForward = false;
             } else if (
@@ -266,20 +266,20 @@ class SdkQtCameraMan
     | Processes mouse movement differently for each style.
     -----------------------------------------------------------------------------*/
     virtual void injectMouseMove(int relX, int relY) {
-        if (mStyle == CS_ORBIT) {
-            Ogre::Real dist = (mCameraNode->getPosition()
-                               - mTarget->_getDerivedPosition())
+        if (style == CS_ORBIT) {
+            Ogre::Real dist = (cameraNode->getPosition()
+                               - target->_getDerivedPosition())
                                   .length();
 
             if (controlStte.orbiting) // yaw around the target, and pitch
                                       // locally
             {
-                mCameraNode->setPosition(mTarget->_getDerivedPosition());
+                cameraNode->setPosition(target->_getDerivedPosition());
 
-                mCameraNode->yaw(Ogre::Degree(-relX * 0.025f));
-                mCameraNode->pitch(Ogre::Degree(-relY * 0.025f));
+                cameraNode->yaw(Ogre::Degree(-relX * 0.025f));
+                cameraNode->pitch(Ogre::Degree(-relY * 0.025f));
 
-                mCameraNode->translate(
+                cameraNode->translate(
                     Ogre::Vector3(0, 0, dist), Ogre::Node::TS_LOCAL);
 
                 // don't let the camera go over the top or around the
@@ -288,13 +288,13 @@ class SdkQtCameraMan
                                             // away from the target
             {
                 // the further the camera is, the faster it moves
-                mCameraNode->translate(
+                cameraNode->translate(
                     Ogre::Vector3(0, 0, relY * 0.004f * dist),
                     Ogre::Node::TS_LOCAL);
             }
-        } else if (mStyle == CS_FREELOOK) {
-            mCameraNode->yaw(Ogre::Degree(-relX * 0.15f));
-            mCameraNode->pitch(Ogre::Degree(-relY * 0.15f));
+        } else if (style == CS_FREELOOK) {
+            cameraNode->yaw(Ogre::Degree(-relX * 0.15f));
+            cameraNode->pitch(Ogre::Degree(-relY * 0.15f));
         }
     }
 
@@ -303,16 +303,16 @@ class SdkQtCameraMan
     -----------------------------------------------------------------------------*/
     virtual void injectWheelMove(const QWheelEvent& evt) {
         int relZ = evt.delta();
-        if (mStyle == CS_ORBIT) {
-            Ogre::Real dist = (mCameraNode->getPosition()
-                               - mTarget->_getDerivedPosition())
+        if (style == CS_ORBIT) {
+            Ogre::Real dist = (cameraNode->getPosition()
+                               - target->_getDerivedPosition())
                                   .length();
 
             if (relZ != 0) // move the camera toward or away from the
                            // target
             {
                 // the further the camera is, the faster it moves
-                mCameraNode->translate(
+                cameraNode->translate(
                     Ogre::Vector3(0, 0, -relZ * 0.0008f * dist),
                     Ogre::Node::TS_LOCAL);
             }
@@ -324,7 +324,7 @@ class SdkQtCameraMan
     | Left button is for orbiting, and right button is for zooming.
     -----------------------------------------------------------------------------*/
     virtual void injectMouseDown(const QMouseEvent& evt) {
-        if (mStyle == CS_ORBIT) {
+        if (style == CS_ORBIT) {
             if (evt.buttons() & Qt::LeftButton) {
                 controlStte.orbiting = true;
             } else if (evt.buttons() & Qt::RightButton) {
@@ -338,7 +338,7 @@ class SdkQtCameraMan
     | Left button is for orbiting, and right button is for zooming.
     -----------------------------------------------------------------------------*/
     virtual void injectMouseUp(const QMouseEvent& evt) {
-        if (mStyle == CS_ORBIT) {
+        if (style == CS_ORBIT) {
             if (evt.buttons() & Qt::LeftButton) {
                 controlStte.orbiting = false;
             } else if (evt.buttons() & Qt::RightButton) {
@@ -348,10 +348,10 @@ class SdkQtCameraMan
     }
 
   protected:
-    Ogre::Camera*    mCamera;
-    Ogre::SceneNode* mCameraNode;
-    CameraStyle      mStyle;
-    Ogre::SceneNode* mTarget;
+    Ogre::Camera*    camera;
+    Ogre::SceneNode* cameraNode;
+    CameraStyle      style;
+    Ogre::SceneNode* target;
     Ogre::Vector3    mVelocity;
 
     struct MoveControlConfig
