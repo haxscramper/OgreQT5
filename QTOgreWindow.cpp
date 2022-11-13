@@ -141,14 +141,17 @@ void QTOgreWindow::initialize() {
      * Ogre3D scene code. Consult other tutorials for specifics.
      */
     ogreSceneManager = ogreRoot->createSceneManager(Ogre::ST_GENERIC);
+    ogreCameraNode   = ogreSceneManager->getRootSceneNode()
+                         ->createChildSceneNode();
 
     ogreCamera = ogreSceneManager->createCamera("MainCamera");
-    ogreCamera->setPosition(Ogre::Vector3(0.0f, 0.0f, 10.0f));
-    ogreCamera->lookAt(Ogre::Vector3(0.0f, 0.0f, -300.0f));
+    ogreCameraNode->attachObject(ogreCamera);
+    ogreCameraNode->setPosition(Ogre::Vector3(0.0f, 0.0f, 10.0f));
+    //    cameraNode->lookAt(Ogre::Vector3(0.0f, 0.0f, -300.0f));
     ogreCamera->setNearClipDistance(0.1f);
     ogreCamera->setFarClipDistance(200.0f);
     cameraManager = new OgreQtBites::SdkQtCameraMan(
-        ogreCamera); // create a default camera controller
+        ogreCamera, ogreCameraNode); // create a default camera controller
 
 
     Ogre::Viewport* viewPort = ogreWindow->addViewport(ogreCamera);
@@ -206,8 +209,11 @@ void QTOgreWindow::createScene() {
     childSceneNode->setScale(Ogre::Vector3(0.01f, 0.01f, 0.01f));
 
 
-    Ogre::Light* light = ogreSceneManager->createLight("MainLight");
-    light->setPosition(20.0f, 80.0f, 50.0f);
+    Ogre::Light*     light = ogreSceneManager->createLight("MainLight");
+    Ogre::SceneNode* lightNode = ogreSceneManager->getRootSceneNode()
+                                     ->createChildSceneNode();
+    lightNode->attachObject(light);
+    lightNode->setPosition(20.0f, 80.0f, 50.0f);
 }
 
 void QTOgreWindow::render() {

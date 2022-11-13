@@ -42,9 +42,6 @@ class QTOgreWindow
     virtual void render();
     virtual void initialize();
     virtual void createScene();
-#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
-    virtual void createCompositor();
-#endif
 
     void setAnimating(bool animating);
 
@@ -74,6 +71,7 @@ class QTOgreWindow
     Ogre::RenderWindow*          ogreWindow;
     Ogre::SceneManager*          ogreSceneManager;
     Ogre::Camera*                ogreCamera;
+    Ogre::SceneNode*             ogreCameraNode;
     Ogre::ColourValue            ogreBackground;
     OgreQtBites::SdkQtCameraMan* cameraManager;
 
