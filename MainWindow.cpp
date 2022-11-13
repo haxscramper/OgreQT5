@@ -1,21 +1,18 @@
 #include "MainWindow.hpp"
-#include "ui_MainWindow.h"
 #include "QTOgreWindow.hpp"
+#include "ui_MainWindow.h"
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
-{
-    ui->setupUi(this);
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow) {
+  ui->setupUi(this);
 
-    ogreWindow = new QTOgreWindow();
-    QWidget* renderingContainer = QWidget::createWindowContainer(ogreWindow);
+  ogreWindow = new QTOgreWindow();
+  QWidget *renderingContainer = QWidget::createWindowContainer(ogreWindow);
 
-    this->setCentralWidget(renderingContainer);
+  this->setCentralWidget(renderingContainer);
 }
 
-MainWindow::~MainWindow()
-{
-    delete ogreWindow;
-    delete ui;
+MainWindow::~MainWindow() {
+  delete ogreWindow;
+  delete ui;
 }

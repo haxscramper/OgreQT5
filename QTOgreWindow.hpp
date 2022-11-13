@@ -4,37 +4,41 @@
 /*
  * Qt headers
  */
-#include <QtWidgets/QApplication>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QWindow>
+#include <QtWidgets/QApplication>
 
 /*
  * Ogre3d header
  */
-#include <Ogre.h>
+#include <OGRE/Ogre.h>
 
 /*
- * Changed SdkCameraMan implementation to work with QKeyEvent, QMouseEvent, QWheelEvent
+ * Changed SdkCameraMan implementation to work with QKeyEvent, QMouseEvent,
+ * QWheelEvent
  */
 #include "SdkQtCameraMan.hpp"
 
-class QTOgreWindow : public QWindow, public Ogre::FrameListener
+class QTOgreWindow
+    : public QWindow
+    , public Ogre::FrameListener
 {
     /*
-     * A QWindow still inherits from QObject and can have signals/slots; we need to add the appropriate
-     * Q_OBJECT keyword so that Qt's intermediate compiler can do the necessary wireup between our class
+     * A QWindow still inherits from QObject and can have signals/slots; we
+     * need to add the appropriate Q_OBJECT keyword so that Qt's
+     * intermediate compiler can do the necessary wireup between our class
      * and the rest of Qt.
      */
     Q_OBJECT
 
-public:
-    explicit QTOgreWindow(QWindow *parent = NULL);
+  public:
+    explicit QTOgreWindow(QWindow* parent = NULL);
     ~QTOgreWindow();
 
     /*
      * We declare these methods virtual to allow for further inheritance.
      */
-    virtual void render(QPainter *painter);
+    virtual void render(QPainter* painter);
     virtual void render();
     virtual void initialize();
     virtual void createScene();
@@ -44,44 +48,47 @@ public:
 
     void setAnimating(bool animating);
 
-public slots:
+  public slots:
 
     virtual void renderLater();
     virtual void renderNow();
 
     /*
-     * We use an event filter to be able to capture the keyboard/mouse events. More on this later.
+     * We use an event filter to be able to capture the keyboard/mouse
+     * events. More on this later.
      */
-    virtual bool eventFilter(QObject *target, QEvent *event);
+    virtual bool eventFilter(QObject* target, QEvent* event);
 
-signals:
+  signals:
     /*
      * Event for clicking on an entity.
      */
     void entitySelected(Ogre::Entity* entity);
 
-protected:
+  protected:
     /*
-     * Ogre4D pointers added here. Useful to have th epointers here for use by the window later.
+     * Ogre4D pointers added here. Useful to have th epointers here for use
+     * by the window later.
      */
-    Ogre::Root* ogreRoot;
-    Ogre::RenderWindow* ogreWindow;
-    Ogre::SceneManager* ogreSceneManager;
-    Ogre::Camera* ogreCamera;
-    Ogre::ColourValue ogreBackground;
+    Ogre::Root*                  ogreRoot;
+    Ogre::RenderWindow*          ogreWindow;
+    Ogre::SceneManager*          ogreSceneManager;
+    Ogre::Camera*                ogreCamera;
+    Ogre::ColourValue            ogreBackground;
     OgreQtBites::SdkQtCameraMan* cameraManager;
 
     bool updatePending;
     bool animating;
 
     /*
-     * The below methods are what is actually fired when the keys on the keyboard are hit.
-     * Similar events are fired when the mouse is pressed or other events occur.
+     * The below methods are what is actually fired when the keys on the
+     * keyboard are hit. Similar events are fired when the mouse is pressed
+     * or other events occur.
      */
     virtual void keyPressEvent(QKeyEvent* ev);
     virtual void keyReleaseEvent(QKeyEvent* ev);
     virtual void mouseMoveEvent(QMouseEvent* e);
-    virtual void wheelEvent(QWheelEvent *e);
+    virtual void wheelEvent(QWheelEvent* e);
     virtual void mousePressEvent(QMouseEvent* e);
     virtual void mouseReleaseEvent(QMouseEvent* e);
     virtual void exposeEvent(QExposeEvent* event);

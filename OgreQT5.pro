@@ -1,29 +1,16 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2017-08-28T18:41:42
-#
-#-------------------------------------------------
-
-QT       += core gui
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui widgets
 
 TARGET = OgreQT5
 TEMPLATE = app
 
-INCLUDEPATH += /usr/include/OGRE
+INCLUDEPATH *= /usr/include/OGRE
 
-SOURCES += main.cpp\
-        MainWindow.cpp \
-    QTOgreWindow.cpp
-
-HEADERS  += MainWindow.hpp \
-    QTOgreWindow.hpp \
-    SdkQtCameraMan.hpp
-
+SOURCES += *.cpp
+HEADERS  += *.hpp
 FORMS    += MainWindow.ui
 
-unix: CONFIG += link_pkgconfig
-unix: PKGCONFIG += OGRE
+DEFINES *= OGRE_NODELESS_POSITIONING
 
-unix:!macx: LIBS += -lboost_system
+LIBS += -lboost_system
+LIBS += -lOgreMain -lOgreBites
+
