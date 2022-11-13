@@ -7,7 +7,6 @@ INCLUDEPATH *= /usr/include/OGRE
 
 SOURCES += *.cpp
 HEADERS  += *.hpp
-FORMS    += MainWindow.ui
 
 DISTFILES *= plugins.cfg
 
